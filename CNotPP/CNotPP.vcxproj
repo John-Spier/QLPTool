@@ -142,6 +142,9 @@
   <ItemGroup>
     <ClCompile Include="qlptool.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="xmsave.ahk" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
