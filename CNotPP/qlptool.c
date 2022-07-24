@@ -23,6 +23,7 @@ int main(int argc, char* argv[]);
 
 int splitqlp(int c, char* v[]) {
 	int i;
+	int manual = 3;
 	char header[4];
 	long int filenum = 0;
 	QLPFILE* filelist;
@@ -57,7 +58,13 @@ int splitqlp(int c, char* v[]) {
 		buffer_left = readtmp->size;
 		fseek(inqlp, readtmp->addr * addr_size, SEEK_SET);
 		//printf("Saving file #%i %s (%i bytes)...\n", i + 1, readtmp->name, readtmp->size);
-		outqlp = fopen(readtmp->name, "wb+");
+		if (manual < c) {
+			outqlp = fopen(v[manual], "wb+");
+			manual++;
+		}
+		else {
+			outqlp = fopen(readtmp->name, "wb+");
+		}
 		if (!outqlp) {
 			perror("Can't open output file");
 			return 1;
@@ -87,7 +94,7 @@ int splitqlp(int c, char* v[]) {
 }
 
 int makeqlp(int c, char* v[]) {
-	int oldsize, padbytes, fnlen, i, j, buffer_left;
+	int oldsize, padbytes, fnlen, i, j, buffer_left, fnstart, fnend;
 	char* buffer;
 	FILE* outqlp;
 	long int filenum = c - 2;
@@ -119,15 +126,34 @@ int makeqlp(int c, char* v[]) {
 
 		lastaddr = writetmp->addr;
 		fnlen = strlen(v[i]);
-		if (fnlen > 15) {
-			for (j = 0; j < 15; j++) {
-				writetmp->name[j] = v[i][j + (fnlen - 15)];
+
+		fnstart = 0;
+		fnend = fnlen;
+		for (j = 0; j < fnlen; j++) {
+			switch (v[i][j]) {
+			/*
+			case '.':
+				fnend = j;
+				break;
+			*/
+			case '/':
+			case '\\':
+				fnstart = j + 1;
+				break;
+			default:
+				break;
 			}
 		}
-		else {
-			for (j = 0; j < fnlen; j++) {
+		if (fnend - fnstart > 15) {
+			fnend = fnstart + 15;
+			/*
+			for (j = fnstart; j < fnstart + 63; j++) {
 				writetmp->name[j] = v[i][j];
 			}
+			*/
+		}
+		for (j = fnstart; j < fnend; j++) {
+			writetmp->name[j - fnstart] = v[i][j];
 		}
 		//printf("file found: %s size:%i addr:%i\n", writetmp->name, writetmp->size, writetmp->addr);
 		fclose(inqlp);
